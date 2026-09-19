@@ -25,21 +25,19 @@ private struct AnalysisView: View {
         VStack(spacing: 0) {
             HeaderView(analysis: analysis)
                 .padding(.horizontal, 24)
-                .padding(.top, 36)
-                .padding(.bottom, 22)
-
-            Divider()
+                .padding(.top, 40)
+                .padding(.bottom, 16)
 
             ScrollView {
-                LazyVStack(spacing: 14) {
-                    SectionCard(
+                LazyVStack(alignment: .leading, spacing: 26) {
+                    AnalysisSection(
                         symbol: "doc.text.magnifyingglass",
                         title: "这是什么",
                         content: analysis.what
                     )
 
                     if !analysis.belongsTo.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: "shippingbox",
                             title: "属于",
                             content: analysis.belongsTo
@@ -47,7 +45,7 @@ private struct AnalysisView: View {
                     }
 
                     if !analysis.purpose.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: "gearshape.2",
                             title: "作用",
                             content: analysis.purpose
@@ -55,7 +53,7 @@ private struct AnalysisView: View {
                     }
 
                     if let openWith = analysis.openWith, !openWith.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: "arrow.up.forward.app",
                             title: "如何打开",
                             content: openWith
@@ -63,7 +61,7 @@ private struct AnalysisView: View {
                     }
 
                     if !analysis.deletion.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: deletionSymbol(for: analysis.deletion),
                             title: "可以删除吗",
                             content: analysis.deletion
@@ -71,7 +69,7 @@ private struct AnalysisView: View {
                     }
 
                     if !analysis.source.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: "globe",
                             title: "来源",
                             content: analysis.source
@@ -79,7 +77,7 @@ private struct AnalysisView: View {
                     }
 
                     if !analysis.confidence.isEmpty {
-                        SectionCard(
+                        AnalysisSection(
                             symbol: "checkmark.shield",
                             title: "可信度",
                             content: analysis.confidence
@@ -87,18 +85,18 @@ private struct AnalysisView: View {
                     }
 
                     if !analysis.evidence.isEmpty {
-                        EvidenceCard(evidence: analysis.evidence)
+                        EvidenceSection(evidence: analysis.evidence)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 18)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-
-            Divider()
 
             FooterView(analysis: analysis)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
+                .background(.bar)
         }
         .background(.regularMaterial)
     }
@@ -222,35 +220,30 @@ private struct FileMetadataView: View {
     }
 }
 
-private struct SectionCard: View {
+private struct AnalysisSection: View {
     let symbol: String
     let title: String
     let content: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol)
-                .font(.system(size: 17, weight: .semibold))
-                .frame(width: 24, height: 24)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 20, height: 20)
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 7) {
                 Text(title)
-                    .font(.headline)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
                 SectionContent(content: content)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
-        }
     }
 }
 
@@ -303,7 +296,7 @@ private struct SectionContent: View {
     }
 }
 
-private struct EvidenceCard: View {
+private struct EvidenceSection: View {
     let evidence: [String]
 
     private var items: [String] {
@@ -316,16 +309,17 @@ private struct EvidenceCard: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "list.bullet.rectangle")
-                .font(.system(size: 17, weight: .semibold))
-                .frame(width: 24, height: 24)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 20, height: 20)
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 9) {
                 Text("关键证据")
-                    .font(.headline)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     HStack(alignment: .top, spacing: 10) {
@@ -344,13 +338,7 @@ private struct EvidenceCard: View {
 
             Spacer(minLength: 0)
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
-        }
     }
 }
 
