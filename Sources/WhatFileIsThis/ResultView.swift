@@ -96,7 +96,6 @@ private struct AnalysisView: View {
             FooterView(analysis: analysis)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
-                .background(.bar)
         }
         .background(.regularMaterial)
     }
