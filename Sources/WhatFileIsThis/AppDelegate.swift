@@ -30,6 +30,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.level = .floating
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak window] in
+                window?.level = .normal
+            }
         }
     }
 }
