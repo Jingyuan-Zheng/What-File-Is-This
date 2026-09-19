@@ -4,22 +4,35 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         ResultStore.shared.loadCommandLineArgumentsIfNeeded()
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        presentWindow()
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         ResultStore.shared.open(urls: filenames.map { URL(fileURLWithPath: $0) })
         sender.reply(toOpenOrPrint: .success)
-        sender.activate(ignoringOtherApps: true)
+        presentWindow()
     }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
         ResultStore.shared.open(urls: [URL(fileURLWithPath: filename)])
-        sender.activate(ignoringOtherApps: true)
+        presentWindow()
         return true
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    private func presentWindow() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+
+        DispatchQueue.main.async {
+            guard let window = NSApplication.shared.windows.first else { return }
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.titlebarAppearsTransparent = true
+            window.level = .floating
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 }
