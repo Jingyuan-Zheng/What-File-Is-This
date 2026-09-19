@@ -24,13 +24,14 @@ private struct AnalysisView: View {
     var body: some View {
         VStack(spacing: 0) {
             HeaderView(analysis: analysis)
-                .padding(.horizontal, 22)
-                .padding(.vertical, 18)
+                .padding(.horizontal, 24)
+                .padding(.top, 36)
+                .padding(.bottom, 22)
 
             Divider()
 
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: 14) {
                     SectionCard(
                         symbol: "doc.text.magnifyingglass",
                         title: "这是什么",
@@ -89,7 +90,8 @@ private struct AnalysisView: View {
                         EvidenceCard(evidence: analysis.evidence)
                     }
                 }
-                .padding(18)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 18)
             }
 
             Divider()
@@ -98,7 +100,7 @@ private struct AnalysisView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(.regularMaterial)
     }
 
     private func deletionSymbol(for text: String) -> String {
@@ -111,24 +113,21 @@ private struct AnalysisView: View {
 private struct HeaderView: View {
     let analysis: AnalysisResult
 
+    private var metadata: FileMetadata? {
+        FileMetadata(url: analysis.targetURL)
+    }
+
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(alignment: .center, spacing: 18) {
             FileIcon(path: analysis.targetPath)
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(analysis.fileName)
-                    .font(.title2.weight(.semibold))
+                    .font(.title.weight(.semibold))
                     .lineLimit(2)
                     .textSelection(.enabled)
 
-                if let path = analysis.displayPath {
-                    Text(path)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
+                FileMetadataView(directory: metadata?.displayDirectory, metadata: metadata)
             }
 
             Spacer(minLength: 10)
@@ -153,7 +152,7 @@ private struct FileIcon: View {
             .resizable()
             .interpolation(.high)
             .scaledToFit()
-            .frame(width: 56, height: 56)
+            .frame(width: 76, height: 76)
             .accessibilityHidden(true)
     }
 
@@ -164,6 +163,62 @@ private struct FileIcon: View {
             return image
         }
         return NSImage(systemSymbolName: "doc.text.magnifyingglass", accessibilityDescription: "文件") ?? NSImage()
+    }
+}
+
+private struct FileMetadata {
+    let directory: String?
+    let modifiedDate: Date?
+    let fileSize: Int?
+
+    var displayDirectory: String? {
+        guard let directory else { return nil }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        if directory == home { return "~" }
+        if directory.hasPrefix(home + "/") {
+            return "~" + String(directory.dropFirst(home.count))
+        }
+        return directory
+    }
+
+    init?(url: URL?) {
+        guard let url else { return nil }
+        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
+        directory = url.deletingLastPathComponent().path
+        modifiedDate = values?.contentModificationDate
+        fileSize = values?.fileSize
+    }
+}
+
+private struct FileMetadataView: View {
+    let directory: String?
+    let metadata: FileMetadata?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let directory {
+                Label(directory, systemImage: "folder")
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+            }
+
+            HStack(spacing: 12) {
+                if let modifiedDate = metadata?.modifiedDate {
+                    Label {
+                        Text(modifiedDate, format: .dateTime.year().month().day().hour().minute())
+                    } icon: {
+                        Image(systemName: "clock")
+                    }
+                }
+
+                if let fileSize = metadata?.fileSize {
+                    Label(ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file), systemImage: "internaldrive")
+                }
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 }
 
@@ -193,18 +248,27 @@ private struct SectionCard: View {
 
             Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.45), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
         }
     }
 }
 
 private struct EvidenceCard: View {
     let evidence: [String]
+
+    private var items: [String] {
+        evidence.flatMap { evidenceItem in
+            evidenceItem
+                .split(whereSeparator: { "。；\n".contains($0) })
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+        }
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -214,15 +278,17 @@ private struct EvidenceCard: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text("关键证据")
                     .font(.headline)
 
-                ForEach(Array(evidence.enumerated()), id: \.offset) { _, item in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Image(systemName: "circle.fill")
-                            .font(.system(size: 4))
-                            .foregroundStyle(.tertiary)
+                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                    HStack(alignment: .top, spacing: 10) {
+                        Text("\(index + 1)")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20, height: 20)
+                            .background(.quaternary, in: Circle())
                         Text(item)
                             .font(.body)
                             .textSelection(.enabled)
@@ -233,12 +299,12 @@ private struct EvidenceCard: View {
 
             Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.45), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
         }
     }
 }

@@ -13,5 +13,7 @@ struct WhatFileIsThisApp: App {
         }
         .defaultSize(width: 780, height: 660)
         .windowResizability(.contentMinSize)
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unified)
     }
 }

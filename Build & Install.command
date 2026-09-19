@@ -28,8 +28,9 @@ APP="$BUILD_DIR/What File Is This.app"
 DEST="$HOME/Applications/What File Is This.app"
 
 /bin/rm -rf "$APP"
-/bin/mkdir -p "$APP/Contents/MacOS"
+/bin/mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 /bin/cp "$BIN" "$APP/Contents/MacOS/WhatFileIsThis"
+/bin/cp "/System/Library/CoreServices/Finder.app/Contents/Resources/Finder.icns" "$APP/Contents/Resources/Finder.icns"
 /bin/chmod 755 "$APP/Contents/MacOS/WhatFileIsThis"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -45,6 +46,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <string>dev.is-a.zjy.whatfileisthis</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
+  <key>CFBundleIconFile</key>
+  <string>Finder</string>
   <key>CFBundleName</key>
   <string>What File Is This</string>
   <key>CFBundlePackageType</key>
