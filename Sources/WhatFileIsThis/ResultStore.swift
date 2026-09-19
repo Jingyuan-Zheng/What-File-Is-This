@@ -8,6 +8,10 @@ final class ResultStore: ObservableObject {
 
     @Published var analysis: AnalysisResult?
     @Published var errorMessage: String?
+    @Published private(set) var isWaitingForResult = false
+
+    private var pendingResultURL: URL?
+    private var pendingResultTimer: Timer?
 
     private init() {}
 
@@ -17,6 +21,7 @@ final class ResultStore: ObservableObject {
     }
 
     func load(url: URL) {
+        stopWaitingForResult()
         do {
             let parsed = try ResultParser.parseResultFile(at: url)
             analysis = parsed.analysis
@@ -25,7 +30,7 @@ final class ResultStore: ObservableObject {
             if parsed.deleteAfterOpen {
                 let temp = URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.path
                 let path = url.standardizedFileURL.path
-                if path.hasPrefix(temp) {
+                if path.hasPrefix(temp) || path == pendingResultURL?.standardizedFileURL.path {
                     try? FileManager.default.removeItem(at: url)
                 }
             }
@@ -34,6 +39,30 @@ final class ResultStore: ObservableObject {
         }
 
         NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    func waitForResult(at url: URL) {
+        stopWaitingForResult()
+        analysis = nil
+        errorMessage = nil
+        pendingResultURL = url
+        isWaitingForResult = true
+
+        pendingResultTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, let pendingResultURL = self.pendingResultURL else { return }
+                guard FileManager.default.fileExists(atPath: pendingResultURL.path) else { return }
+                self.load(url: pendingResultURL)
+            }
+        }
+        RunLoop.main.add(pendingResultTimer!, forMode: .common)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    private func stopWaitingForResult() {
+        pendingResultTimer?.invalidate()
+        pendingResultTimer = nil
+        isWaitingForResult = false
     }
 
     func loadCommandLineArgumentsIfNeeded() {
@@ -46,6 +75,10 @@ final class ResultStore: ObservableObject {
         if let flagIndex = arguments.firstIndex(of: "--wfit-result"),
            arguments.indices.contains(flagIndex + 1) {
             let candidate = URL(fileURLWithPath: arguments[flagIndex + 1])
+            if arguments.contains("--wfit-loading") {
+                waitForResult(at: candidate)
+                return
+            }
             if FileManager.default.fileExists(atPath: candidate.path) {
                 load(url: candidate)
                 return

@@ -10,10 +10,28 @@ struct RootView: View {
                 AnalysisView(analysis: analysis)
             } else if let error = store.errorMessage {
                 ErrorView(message: error)
+            } else if store.isWaitingForResult {
+                LoadingView()
             } else {
                 EmptyViewState()
             }
         }
+    }
+}
+
+private struct LoadingView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.large)
+            Text("正在分析文件…")
+                .font(.title3.weight(.semibold))
+            Text("结果准备好后会自动显示。")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial)
     }
 }
 
