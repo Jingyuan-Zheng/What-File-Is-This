@@ -26,7 +26,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func presentWindow() {
         NSApplication.shared.activate(ignoringOtherApps: true)
         DispatchQueue.main.async {
-            NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
+            guard let window = NSApplication.shared.windows.first else { return }
+            window.level = .floating
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
         }
     }
 }
