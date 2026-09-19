@@ -38,7 +38,7 @@ final class ResultStore: ObservableObject {
             errorMessage = error.localizedDescription
         }
 
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        presentWindow()
     }
 
     func waitForResult(at url: URL) {
@@ -56,13 +56,20 @@ final class ResultStore: ObservableObject {
             }
         }
         RunLoop.main.add(pendingResultTimer!, forMode: .common)
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        presentWindow()
     }
 
     private func stopWaitingForResult() {
         pendingResultTimer?.invalidate()
         pendingResultTimer = nil
         isWaitingForResult = false
+    }
+
+    private func presentWindow() {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
+        }
     }
 
     func loadCommandLineArgumentsIfNeeded() {
