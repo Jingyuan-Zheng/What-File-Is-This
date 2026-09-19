@@ -239,11 +239,7 @@ private struct SectionCard: View {
                 Text(title)
                     .font(.headline)
 
-                Text(content)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
+                SectionContent(content: content)
             }
 
             Spacer(minLength: 0)
@@ -254,6 +250,55 @@ private struct SectionCard: View {
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
+        }
+    }
+}
+
+private struct SectionContent: View {
+    let content: String
+
+    private var listItems: [String] {
+        content
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .compactMap(markdownListItem)
+    }
+
+    private func markdownListItem(_ line: Substring) -> String? {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let marker = trimmed.first, ["-", "*", "+", "•", "–", "—"].contains(marker) {
+            let item = trimmed.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+            return item.isEmpty ? nil : item
+        }
+
+        let digits = trimmed.prefix { $0.isNumber }
+        guard !digits.isEmpty,
+              let separator = trimmed.dropFirst(digits.count).first,
+              [".", ")", "、"].contains(separator) else { return nil }
+        let item = trimmed.dropFirst(digits.count + 1).trimmingCharacters(in: .whitespacesAndNewlines)
+        return item.isEmpty ? nil : item
+    }
+
+    var body: some View {
+        if listItems.isEmpty {
+            Text(content)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            VStack(alignment: .leading, spacing: 7) {
+                ForEach(Array(listItems.enumerated()), id: \.offset) { _, item in
+                    Label(item, systemImage: "checkmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                        .labelStyle(.titleAndIcon)
+                        .symbolRenderingMode(.hierarchical)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 }

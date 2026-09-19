@@ -63,6 +63,11 @@ struct ResultParser {
         let fileName = !parsedName.isEmpty ? parsedName : (targetName ?? "文件分析结果")
         let what = body("这是什么")
         let evidence = parseEvidence(body("证据"))
+        let resolvedTargetPath = resolveTargetPath(
+            explicitPath: targetPath,
+            fileName: fileName,
+            evidence: evidence
+        )
 
         return AnalysisResult(
             fileName: fileName,
@@ -75,7 +80,7 @@ struct ResultParser {
             confidence: body("可信度"),
             evidence: evidence,
             rawText: text.trimmingCharacters(in: .whitespacesAndNewlines),
-            targetPath: targetPath
+            targetPath: resolvedTargetPath
         )
     }
 
@@ -104,10 +109,9 @@ struct ResultParser {
             let trimmed = rawLine.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { continue }
 
-            let bulletPrefixes = ["- ", "• ", "* ", "– ", "— "]
-            if let prefix = bulletPrefixes.first(where: { trimmed.hasPrefix($0) }) {
+            if let item = listItem(in: trimmed) {
                 if let current, !current.isEmpty { output.append(current) }
-                current = String(trimmed.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
+                current = item
             } else if var existing = current {
                 existing += (existing.hasSuffix("\n") ? "" : " ") + trimmed
                 current = existing
@@ -118,6 +122,48 @@ struct ResultParser {
 
         if let current, !current.isEmpty { output.append(current) }
         return output
+    }
+
+    private static func listItem(in line: String) -> String? {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let marker = trimmed.first, ["-", "*", "+", "•", "–", "—"].contains(marker) {
+            let item = trimmed.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+            return item.isEmpty ? nil : item
+        }
+
+        let digits = trimmed.prefix { $0.isNumber }
+        guard !digits.isEmpty,
+              let separator = trimmed.dropFirst(digits.count).first,
+              [".", ")", "、"].contains(separator) else { return nil }
+        let item = trimmed.dropFirst(digits.count + 1).trimmingCharacters(in: .whitespacesAndNewlines)
+        return item.isEmpty ? nil : item
+    }
+
+    /// Older Shortcut results sometimes omit PATH_B64 but include the enclosing
+    /// directory in evidence. Recover the selected item when it is unambiguous.
+    private static func resolveTargetPath(explicitPath: String?, fileName: String, evidence: [String]) -> String? {
+        if let explicitPath, !explicitPath.isEmpty { return explicitPath }
+
+        for evidenceItem in evidence {
+            guard let slash = evidenceItem.firstIndex(of: "/") else { continue }
+            let candidate = String(evidenceItem[slash...])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "。；;，,）)])\"'"))
+            guard candidate.hasPrefix("/") else { continue }
+
+            var url = URL(fileURLWithPath: candidate)
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else { continue }
+            if isDirectory.boolValue {
+                url.appendPathComponent(fileName)
+            }
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url.path
+            }
+        }
+        return nil
     }
 
     private static func stripOuterMarkdown(_ value: String) -> String {

@@ -47,7 +47,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleIconFile</key>
-  <string>Finder</string>
+  <string>Finder.icns</string>
   <key>CFBundleName</key>
   <string>What File Is This</string>
   <key>CFBundlePackageType</key>
