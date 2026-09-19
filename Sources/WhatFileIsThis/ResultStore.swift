@@ -66,16 +66,7 @@ final class ResultStore: ObservableObject {
     }
 
     private func presentWindow() {
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        DispatchQueue.main.async {
-            guard let window = NSApplication.shared.windows.first else { return }
-            window.level = .floating
-            window.makeKeyAndOrderFront(nil)
-            window.orderFrontRegardless()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak window] in
-                window?.level = .normal
-            }
-        }
+        WindowPresenter.present()
     }
 
     func loadCommandLineArgumentsIfNeeded() {

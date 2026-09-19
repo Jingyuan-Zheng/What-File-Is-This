@@ -33,14 +33,8 @@ private struct WindowFrontmostBridge: NSViewRepresentable {
 
     private func presentWhenAttached(_ view: NSView) {
         DispatchQueue.main.async {
-            guard let window = view.window else { return }
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            window.level = .floating
-            window.makeKeyAndOrderFront(nil)
-            window.orderFrontRegardless()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak window] in
-                window?.level = .normal
-            }
+            guard view.window != nil else { return }
+            WindowPresenter.present()
         }
     }
 }

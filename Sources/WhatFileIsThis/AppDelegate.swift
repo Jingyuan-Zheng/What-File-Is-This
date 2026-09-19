@@ -1,8 +1,12 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var windowController: NSWindowController?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        createMainWindowIfNeeded()
         ResultStore.shared.loadCommandLineArgumentsIfNeeded()
         presentWindow()
     }
@@ -23,16 +27,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         true
     }
 
+    private func createMainWindowIfNeeded() {
+        guard windowController == nil else { return }
+
+        let rootView = RootView()
+            .environmentObject(ResultStore.shared)
+            .frame(minWidth: 680, minHeight: 500)
+        let hostingController = NSHostingController(rootView: rootView)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 780, height: 660),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.title = "What File Is This"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.toolbarStyle = .unified
+        window.contentViewController = hostingController
+        window.isReleasedWhenClosed = false
+        window.center()
+
+        let controller = NSWindowController(window: window)
+        windowController = controller
+        controller.showWindow(nil)
+    }
+
     private func presentWindow() {
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        DispatchQueue.main.async {
-            guard let window = NSApplication.shared.windows.first else { return }
-            window.level = .floating
-            window.makeKeyAndOrderFront(nil)
-            window.orderFrontRegardless()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak window] in
-                window?.level = .normal
-            }
-        }
+        WindowPresenter.present()
     }
 }
