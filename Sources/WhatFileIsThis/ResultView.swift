@@ -16,6 +16,29 @@ struct RootView: View {
                 EmptyViewState()
             }
         }
+        .background(WindowFrontmostBridge())
+    }
+}
+
+private struct WindowFrontmostBridge: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        presentWhenAttached(view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        presentWhenAttached(nsView)
+    }
+
+    private func presentWhenAttached(_ view: NSView) {
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            window.level = .floating
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+        }
     }
 }
 
