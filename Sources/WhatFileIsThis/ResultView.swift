@@ -274,24 +274,67 @@ private struct SectionContent: View {
 
     var body: some View {
         if listItems.isEmpty {
-            Text(content)
-                .font(.body)
-                .foregroundStyle(.primary)
+            MarkdownText(content)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         } else {
             VStack(alignment: .leading, spacing: 7) {
                 ForEach(Array(listItems.enumerated()), id: \.offset) { _, item in
-                    Label(item, systemImage: "checkmark.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(.primary)
-                        .labelStyle(.titleAndIcon)
-                        .symbolRenderingMode(.hierarchical)
-                        .textSelection(.enabled)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(.secondary)
+                        MarkdownText(item)
+                            .textSelection(.enabled)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+    }
+}
+
+/// Renders the Markdown bold delimiter as a readable highlighter instead of
+/// exposing the asterisks in analysis prose.
+private struct MarkdownText: View {
+    let source: String
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(_ source: String) {
+        self.source = source
+    }
+
+    var body: some View {
+        Text(attributedText)
+            .font(.body)
+            .foregroundStyle(.primary)
+    }
+
+    private var attributedText: AttributedString {
+        var output = AttributedString()
+        var remaining = source[...]
+
+        while let opening = remaining.range(of: "**") {
+            output += AttributedString(String(remaining[..<opening.lowerBound]))
+            let afterOpening = remaining[opening.upperBound...]
+
+            guard let closing = afterOpening.range(of: "**") else {
+                output += AttributedString(String(remaining[opening.lowerBound...]))
+                return output
+            }
+
+            let markedText = String(afterOpening[..<closing.lowerBound])
+            var marked = AttributedString(markedText)
+            marked.inlinePresentationIntent = .stronglyEmphasized
+            marked.backgroundColor = NSColor.systemYellow.withAlphaComponent(
+                colorScheme == .dark ? 0.46 : 0.32
+            )
+            output += marked
+            remaining = afterOpening[closing.upperBound...]
+        }
+
+        output += AttributedString(String(remaining))
+        return output
     }
 }
 
@@ -327,8 +370,7 @@ private struct EvidenceSection: View {
                             .foregroundStyle(.secondary)
                             .frame(width: 20, height: 20)
                             .background(.quaternary, in: Circle())
-                        Text(item)
-                            .font(.body)
+                        MarkdownText(item)
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
                     }
