@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "WhatFileIsThis",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
@@ -12,7 +13,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "WhatFileIsThis",
-            path: "Sources/WhatFileIsThis"
+            path: "Sources/WhatFileIsThis",
+            resources: [.process("Resources")]
         )
     ],
     swiftLanguageVersions: [.v5]

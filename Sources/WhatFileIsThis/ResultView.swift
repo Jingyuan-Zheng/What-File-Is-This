@@ -44,9 +44,9 @@ private struct LoadingView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .controlSize(.large)
-            Text("正在分析文件…")
+            Text(L10n.ui("正在分析文件…"))
                 .font(.title3.weight(.semibold))
-            Text("结果准备好后会自动显示。")
+            Text(L10n.ui("结果准备好后会自动显示。"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -70,14 +70,14 @@ private struct AnalysisView: View {
                 LazyVStack(alignment: .leading, spacing: 26) {
                     AnalysisSection(
                         symbol: "doc.text.magnifyingglass",
-                        title: "这是什么",
+                        title: L10n.ui("这是什么"),
                         content: analysis.what
                     )
 
                     if !analysis.belongsTo.isEmpty {
                         AnalysisSection(
                             symbol: "shippingbox",
-                            title: "属于",
+                            title: L10n.ui("属于"),
                             content: analysis.belongsTo
                         )
                     }
@@ -85,7 +85,7 @@ private struct AnalysisView: View {
                     if !analysis.purpose.isEmpty {
                         AnalysisSection(
                             symbol: "gearshape.2",
-                            title: "作用",
+                            title: L10n.ui("作用"),
                             content: analysis.purpose
                         )
                     }
@@ -93,7 +93,7 @@ private struct AnalysisView: View {
                     if let openWith = analysis.openWith, !openWith.isEmpty {
                         AnalysisSection(
                             symbol: "arrow.up.forward.app",
-                            title: "如何打开",
+                            title: L10n.ui("如何打开"),
                             content: openWith
                         )
                     }
@@ -101,7 +101,7 @@ private struct AnalysisView: View {
                     if !analysis.deletion.isEmpty {
                         AnalysisSection(
                             symbol: deletionSymbol(for: analysis.deletion),
-                            title: "可以删除吗",
+                            title: L10n.ui("可以删除吗"),
                             content: analysis.deletion
                         )
                     }
@@ -109,7 +109,7 @@ private struct AnalysisView: View {
                     if !analysis.source.isEmpty {
                         AnalysisSection(
                             symbol: "globe",
-                            title: "来源",
+                            title: L10n.ui("来源"),
                             content: analysis.source
                         )
                     }
@@ -117,7 +117,7 @@ private struct AnalysisView: View {
                     if !analysis.confidence.isEmpty {
                         AnalysisSection(
                             symbol: "checkmark.shield",
-                            title: "可信度",
+                            title: L10n.ui("可信度"),
                             content: analysis.confidence
                         )
                     }
@@ -397,7 +397,7 @@ private struct EvidenceSection: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 9) {
-                Text("关键证据")
+                Text(L10n.ui("关键证据"))
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -435,7 +435,7 @@ private struct FooterView: View {
             Button {
                 store.copyResult()
             } label: {
-                Label("复制结果", systemImage: "doc.on.doc")
+                Label(L10n.ui("复制结果"), systemImage: "doc.on.doc")
             }
 
             Spacer()
@@ -444,14 +444,14 @@ private struct FooterView: View {
                 Button {
                     store.revealInFinder()
                 } label: {
-                    Label("在访达中显示", systemImage: "folder")
+                    Label(L10n.ui("在访达中显示"), systemImage: "folder")
                 }
             }
 
             Button {
                 store.closeWindow()
             } label: {
-                Label("完成", systemImage: "checkmark")
+                Label(L10n.ui("完成"), systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
         }
@@ -468,7 +468,7 @@ private struct EmptyViewState: View {
             Text("What File Is This")
                 .font(.title2.weight(.semibold))
 
-            Text("通过 Finder 中的 “What file is this” 快捷指令运行文件分析，结果会显示在这里。")
+            Text(L10n.ui("通过 Finder 中的 “What file is this” 快捷指令运行文件分析，结果会显示在这里。"))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 430)
@@ -487,13 +487,13 @@ private struct ErrorView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text("无法显示分析结果")
+            Text(L10n.ui("无法显示分析结果"))
                 .font(.title3.weight(.semibold))
             Text(message)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .textSelection(.enabled)
-            Button("关闭") {
+            Button(L10n.ui("关闭")) {
                 store.closeWindow()
             }
             .keyboardShortcut(.defaultAction)

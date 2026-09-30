@@ -31,6 +31,8 @@ DEST="$HOME/Applications/What File Is This.app"
 /bin/mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 /bin/cp "$BIN" "$APP/Contents/MacOS/WhatFileIsThis"
 /bin/cp "/System/Library/CoreServices/Finder.app/Contents/Resources/Finder.icns" "$APP/Contents/Resources/Finder.icns"
+/bin/cp -R "$ROOT/Sources/WhatFileIsThis/Resources/en.lproj" "$APP/Contents/Resources/"
+/bin/cp -R "$ROOT/Sources/WhatFileIsThis/Resources/zh-Hans.lproj" "$APP/Contents/Resources/"
 /bin/chmod 755 "$APP/Contents/MacOS/WhatFileIsThis"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -50,6 +52,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <string>Finder.icns</string>
   <key>CFBundleName</key>
   <string>What File Is This</string>
+  <key>CFBundleLocalizations</key>
+  <array><string>en</string><string>zh-Hans</string></array>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
