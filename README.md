@@ -1,4 +1,18 @@
-# What File Is This
+# What File Is This / 这是什么文件
+
+[English](#english) · [中文](#中文)
+
+## English
+
+A native macOS SwiftUI viewer for AI file-analysis results created by the “What file is this?” Finder Shortcut. It displays the result, file metadata, evidence, copy/reveal actions, and supports `.wfitresult`, JSON, plist, and Chinese segmented-text input.
+
+### Build and install
+
+Run `Build & Install.command`. The app is installed at `~/Applications/What File Is This.app`.
+
+The Shortcut starts the app with `--wfit-result /path/to/result.wfitresult`; the app does not perform AI analysis itself. English and Simplified Chinese are available in the standard Settings window.
+
+## 中文
 
 一个轻量的原生 macOS SwiftUI 结果窗口，用来显示 “What file is this” Finder 快捷指令的 AI 文件分析结果。
 
