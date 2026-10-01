@@ -11,8 +11,8 @@ struct WhatFileIsThisApp: App {
             ResultDocumentView(document: document)
                 .frame(minWidth: 680, minHeight: 500)
         }
-        makeReadableDocument: { _, _ in
-            ResultDocument()
+        makeReadableDocument: { configuration, _ in
+            ResultDocument(fileURL: configuration.fileURL)
         }
         .defaultSize(width: 780, height: 660)
         .windowResizability(.contentMinSize)

@@ -30,8 +30,19 @@ struct AnalysisResult: Equatable, Sendable {
 }
 
 struct ParsedResultFile: Sendable {
-    var analysis: AnalysisResult
+    var analysis: AnalysisResult?
+    var isLoading: Bool
     var deleteAfterOpen: Bool
+
+    init(
+        analysis: AnalysisResult?,
+        isLoading: Bool = false,
+        deleteAfterOpen: Bool = false
+    ) {
+        self.analysis = analysis
+        self.isLoading = isLoading
+        self.deleteAfterOpen = deleteAfterOpen
+    }
 }
 
 enum ResultReadError: LocalizedError {

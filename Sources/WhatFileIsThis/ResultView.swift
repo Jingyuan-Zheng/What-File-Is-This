@@ -27,7 +27,7 @@ struct RootView: View {
     }
 
     private func revealInFinder() {
-        guard let url = document.parsedResult?.analysis.targetURL,
+        guard let url = document.parsedResult?.analysis?.targetURL,
               FileManager.default.fileExists(atPath: url.path) else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }

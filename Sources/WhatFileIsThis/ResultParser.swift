@@ -281,6 +281,11 @@ struct ResultParser {
             values[key] = value
         }
 
+        let isLoading = values["STATE"]?.uppercased() == "LOADING"
+        if isLoading {
+            return ParsedResultFile(analysis: nil, isLoading: true)
+        }
+
         guard let resultB64 = values["RESULT_B64"],
               let resultData = Data(base64Encoded: resultB64),
               let analysisText = String(data: resultData, encoding: .utf8),

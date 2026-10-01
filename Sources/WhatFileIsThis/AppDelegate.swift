@@ -3,6 +3,10 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+
     func showAboutPanel(language: AppLanguage) {
         NSApp.orderFrontStandardAboutPanel(options: [.credits: aboutCredits(language: language)])
         NSApp.activate()
