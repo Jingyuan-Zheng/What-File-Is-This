@@ -16,6 +16,31 @@ struct RootView: View {
                 EmptyViewState()
             }
         }
+        .background(ResultWindowPresentationBridge())
+    }
+}
+
+/// SwiftUI calls this view only from the result scene. Once the host NSWindow
+/// is actually attached, use AppKit's standard show operation for that window.
+/// It intentionally does not alter window level, position, or any Settings UI.
+private struct ResultWindowPresentationBridge: NSViewRepresentable {
+    func makeNSView(context: Context) -> ResultWindowAttachmentView {
+        ResultWindowAttachmentView()
+    }
+
+    func updateNSView(_ nsView: ResultWindowAttachmentView, context: Context) {}
+}
+
+private final class ResultWindowAttachmentView: NSView {
+    private var hasPresented = false
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard !hasPresented,
+              NSApp.isActive,
+              let window else { return }
+        window.makeKeyAndOrderFront(nil)
+        hasPresented = true
     }
 }
 
