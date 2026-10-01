@@ -115,9 +115,21 @@ struct ResultParser {
         }
 
         func body(_ key: Section) -> String {
-            let value = sections[key, default: []]
+            let joined = sections[key, default: []]
                 .joined(separator: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Source sub-fields are rendered as compact "Label: value" rows.
+            // The protocol often inserts blank lines between those fields;
+            // they do not represent a separate paragraph in the result.
+            let value: String
+            if key == .source {
+                value = joined
+                    .split(separator: "\n", omittingEmptySubsequences: true)
+                    .joined(separator: "\n")
+            } else {
+                value = joined
+            }
             return stripOuterMarkdown(value)
         }
 
