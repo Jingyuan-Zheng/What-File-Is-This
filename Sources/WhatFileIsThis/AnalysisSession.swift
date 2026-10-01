@@ -6,10 +6,12 @@ import SwiftUI
 @Observable
 final class AnalysisSession {
     let id: String
+    let targetPath: String
     var analysis: AnalysisResult?
 
-    init(id: String) {
+    init(id: String, targetPath: String) {
         self.id = id
+        self.targetPath = targetPath
     }
 }
 

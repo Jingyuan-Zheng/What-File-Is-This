@@ -2,7 +2,6 @@ import Darwin
 import Foundation
 
 struct LocalResultPayload: Decodable {
-    let id: String
     let pathB64: String
     let resultB64: String
 }

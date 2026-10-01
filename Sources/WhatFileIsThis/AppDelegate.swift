@@ -5,6 +5,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var sessions: [String: AnalysisSession] = [:]
     private var sessionWindows: [String: NSWindowController] = [:]
+    private var pendingSessionIDsByPath: [String: [String]] = [:]
     private lazy var resultServer = LocalResultServer { [weak self] payload in
         self?.apply(payload)
     }
@@ -30,12 +31,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handle(_ url: URL) {
         guard url.scheme?.lowercased() == "whatfileisthis",
               let command = url.host?.lowercased(),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let id = components.queryItems?.first(where: { $0.name == "id" })?.value,
-              !id.isEmpty else { return }
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
 
         switch command {
         case "loading":
+            guard let encodedPath = components.queryItems?.first(where: { $0.name == "path_b64" })?.value,
+                  let path = decodeBase64URL(encodedPath),
+                  !path.isEmpty else { return }
+            let id = UUID().uuidString
+            let session = AnalysisSession(id: id, targetPath: path)
+            sessions[id] = session
+            pendingSessionIDsByPath[path, default: []].append(id)
             showSession(id: id)
         default:
             return
@@ -49,8 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let session = sessions[id] ?? AnalysisSession(id: id)
-        sessions[id] = session
+        guard let session = sessions[id] else { return }
 
         let controller = NSHostingController(rootView: AnalysisSessionView(session: session))
         let window = NSWindow(contentViewController: controller)
@@ -68,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.sessionWindows.removeValue(forKey: id)
-                self?.sessions.removeValue(forKey: id)
+                self?.removeSession(id: id)
             }
         }
 
@@ -81,12 +86,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
               let path = String(data: pathData, encoding: .utf8),
               let resultData = Data(base64Encoded: payload.resultB64),
               let resultText = String(data: resultData, encoding: .utf8),
-              !payload.id.isEmpty else { return }
+              var pendingIDs = pendingSessionIDsByPath[path],
+              !pendingIDs.isEmpty else { return }
 
-        let session = sessions[payload.id] ?? AnalysisSession(id: payload.id)
+        let id = pendingIDs.removeFirst()
+        if pendingIDs.isEmpty {
+            pendingSessionIDsByPath.removeValue(forKey: path)
+        } else {
+            pendingSessionIDsByPath[path] = pendingIDs
+        }
+        guard let session = sessions[id] else { return }
         session.analysis = ResultParser.parseSectionedAnalysis(resultText, targetPath: path)
-        sessions[payload.id] = session
-        showSession(id: payload.id)
+        showSession(id: id)
+    }
+
+    private func removeSession(id: String) {
+        sessions.removeValue(forKey: id)
+        for path in Array(pendingSessionIDsByPath.keys) {
+            guard let ids = pendingSessionIDsByPath[path] else { continue }
+            let remaining = ids.filter { $0 != id }
+            if remaining.isEmpty {
+                pendingSessionIDsByPath.removeValue(forKey: path)
+            } else {
+                pendingSessionIDsByPath[path] = remaining
+            }
+        }
+    }
+
+    private func decodeBase64URL(_ value: String) -> String? {
+        var base64 = value.replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
+        guard let data = Data(base64Encoded: base64) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     func showAboutPanel(language: AppLanguage) {
