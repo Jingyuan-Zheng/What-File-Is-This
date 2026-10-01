@@ -1,7 +1,29 @@
 import Foundation
 
 struct ResultParser {
-    private static let headings = ["文件", "这是什么", "属于", "作用", "如何打开", "可以删除吗", "来源", "可信度", "证据"]
+    private enum Section: String, CaseIterable {
+        case file = "[FILE]"
+        case whatIsIt = "[WHAT_IS_IT]"
+        case belongsTo = "[BELONGS_TO]"
+        case purpose = "[PURPOSE]"
+        case howToOpen = "[HOW_TO_OPEN]"
+        case deleteGuidance = "[DELETE_GUIDANCE]"
+        case source = "[SOURCE]"
+        case confidence = "[CONFIDENCE]"
+        case evidence = "[EVIDENCE]"
+    }
+
+    private static let legacyHeadingMap: [String: Section] = [
+        "文件": .file,
+        "这是什么": .whatIsIt,
+        "属于": .belongsTo,
+        "作用": .purpose,
+        "如何打开": .howToOpen,
+        "可以删除吗": .deleteGuidance,
+        "来源": .source,
+        "可信度": .confidence,
+        "证据": .evidence
+    ]
 
     static func parseResultFile(at url: URL) throws -> ParsedResultFile {
         guard let data = try? Data(contentsOf: url) else {
@@ -38,8 +60,8 @@ struct ResultParser {
 
     static func parseSectionedAnalysis(_ text: String, targetPath: String?) -> AnalysisResult {
         let lines = text.replacingOccurrences(of: "\r\n", with: "\n").split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        var sections: [String: [String]] = [:]
-        var current: String?
+        var sections: [Section: [String]] = [:]
+        var current: Section?
 
         for originalLine in lines {
             let line = originalLine.trimmingCharacters(in: .whitespaces)
@@ -51,7 +73,7 @@ struct ResultParser {
             }
         }
 
-        func body(_ key: String) -> String {
+        func body(_ key: Section) -> String {
             let value = sections[key, default: []]
                 .joined(separator: "\n")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -59,10 +81,10 @@ struct ResultParser {
         }
 
         let targetName = targetPath.map { URL(fileURLWithPath: $0).lastPathComponent }
-        let parsedName = body("文件")
-        let fileName = !parsedName.isEmpty ? parsedName : (targetName ?? "文件分析结果")
-        let what = body("这是什么")
-        let evidence = parseEvidence(body("证据"))
+        let parsedName = body(.file)
+        let fileName = !parsedName.isEmpty ? parsedName : (targetName ?? "File Analysis Result")
+        let what = body(.whatIsIt)
+        let evidence = parseEvidence(body(.evidence))
         let resolvedTargetPath = resolveTargetPath(
             explicitPath: targetPath,
             fileName: fileName,
@@ -72,31 +94,60 @@ struct ResultParser {
         return AnalysisResult(
             fileName: fileName,
             what: what.isEmpty ? text.trimmingCharacters(in: .whitespacesAndNewlines) : what,
-            belongsTo: body("属于"),
-            purpose: body("作用"),
-            openWith: body("如何打开").nilIfEmpty,
-            deletion: body("可以删除吗"),
-            source: body("来源"),
-            confidence: body("可信度"),
+            belongsTo: body(.belongsTo),
+            purpose: body(.purpose),
+            openWith: body(.howToOpen).nilIfEmpty,
+            deletion: body(.deleteGuidance),
+            source: body(.source),
+            confidence: body(.confidence),
             evidence: evidence,
             rawText: text.trimmingCharacters(in: .whitespacesAndNewlines),
             targetPath: resolvedTargetPath
         )
     }
 
-    private static func splitHeading(_ line: String) -> (heading: String, remainder: String)? {
+    private static func splitHeading(_ line: String) -> (heading: Section, remainder: String)? {
         var candidate = line.trimmingCharacters(in: .whitespacesAndNewlines)
         candidate = candidate.replacingOccurrences(of: "**", with: "")
 
-        for heading in headings {
-            for separator in ["：", ":"] {
-                let prefix = heading + separator
-                if candidate.hasPrefix(prefix) {
-                    let remainder = String(candidate.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
-                    return (heading, remainder)
+        // Canonical machine-readable format:
+        // [FILE]
+        // [WHAT_IS_IT]
+        // ...
+        for section in Section.allCases {
+            if candidate == section.rawValue {
+                return (section, "")
+            }
+
+            // Also tolerate "[FILE]: value" and "[FILE] value".
+            if candidate.hasPrefix(section.rawValue) {
+                let suffix = String(candidate.dropFirst(section.rawValue.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                if suffix.isEmpty {
+                    return (section, "")
+                }
+
+                if suffix.hasPrefix(":") || suffix.hasPrefix("：") {
+                    let remainder = String(suffix.dropFirst())
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    return (section, remainder)
                 }
             }
         }
+
+        // Backward compatibility with older localized outputs.
+        for (legacyHeading, section) in legacyHeadingMap {
+            for separator in ["：", ":"] {
+                let prefix = legacyHeading + separator
+                if candidate.hasPrefix(prefix) {
+                    let remainder = String(candidate.dropFirst(prefix.count))
+                        .trimmingCharacters(in: .whitespaces)
+                    return (section, remainder)
+                }
+            }
+        }
+
         return nil
     }
 
@@ -230,23 +281,23 @@ struct ResultParser {
         }
 
         let analysisDict = (dict["analysis"] as? [String: Any]) ?? dict
-        let what = string(analysisDict, keys: ["what", "whatIsThis", "这是什么"]) ?? ""
+        let what = string(analysisDict, keys: ["what", "whatIsThis"]) ?? ""
         guard !what.isEmpty else { throw ResultReadError.missingAnalysis }
 
-        let fileName = string(analysisDict, keys: ["file", "fileName", "文件"])
+        let fileName = string(analysisDict, keys: ["file", "fileName"])
             ?? targetPath.map { URL(fileURLWithPath: $0).lastPathComponent }
-            ?? "文件分析结果"
-        let evidence = stringArray(analysisDict, keys: ["evidence", "证据"])
+            ?? "File Analysis Result"
+        let evidence = stringArray(analysisDict, keys: ["evidence"])
 
         let result = AnalysisResult(
             fileName: fileName,
             what: what,
-            belongsTo: string(analysisDict, keys: ["belongsTo", "belongs", "属于"]) ?? "",
-            purpose: string(analysisDict, keys: ["purpose", "role", "作用"]) ?? "",
-            openWith: string(analysisDict, keys: ["openWith", "howToOpen", "如何打开"])?.nilIfEmpty,
-            deletion: string(analysisDict, keys: ["deletion", "canDelete", "可以删除吗"]) ?? "",
-            source: string(analysisDict, keys: ["source", "来源"]) ?? "",
-            confidence: string(analysisDict, keys: ["confidence", "可信度"]) ?? "",
+            belongsTo: string(analysisDict, keys: ["belongsTo", "belongs"]) ?? "",
+            purpose: string(analysisDict, keys: ["purpose", "role"]) ?? "",
+            openWith: string(analysisDict, keys: ["openWith", "howToOpen"])?.nilIfEmpty,
+            deletion: string(analysisDict, keys: ["deletion", "canDelete", "deleteGuidance"]) ?? "",
+            source: string(analysisDict, keys: ["source"]) ?? "",
+            confidence: string(analysisDict, keys: ["confidence"]) ?? "",
             evidence: evidence,
             rawText: string(analysisDict, keys: ["rawText"]) ?? buildRawText(from: analysisDict),
             targetPath: targetPath
@@ -289,28 +340,35 @@ struct ResultParser {
     }
 
     private static func buildRawText(from dict: [String: Any]) -> String {
-        let mapping: [(String, [String])] = [
-            ("文件", ["file", "fileName", "文件"]),
-            ("这是什么", ["what", "whatIsThis", "这是什么"]),
-            ("属于", ["belongsTo", "belongs", "属于"]),
-            ("作用", ["purpose", "role", "作用"]),
-            ("如何打开", ["openWith", "howToOpen", "如何打开"]),
-            ("可以删除吗", ["deletion", "canDelete", "可以删除吗"]),
-            ("来源", ["source", "来源"]),
-            ("可信度", ["confidence", "可信度"])
+        let mapping: [(Section, [String])] = [
+            (.file, ["file", "fileName"]),
+            (.whatIsIt, ["what", "whatIsThis"]),
+            (.belongsTo, ["belongsTo", "belongs"]),
+            (.purpose, ["purpose", "role"]),
+            (.howToOpen, ["openWith", "howToOpen"]),
+            (.deleteGuidance, ["deletion", "canDelete", "deleteGuidance"]),
+            (.source, ["source"]),
+            (.confidence, ["confidence"])
         ]
+
         var blocks: [String] = []
-        for (heading, keys) in mapping {
+        for (section, keys) in mapping {
             if let value = string(dict, keys: keys) {
-                blocks.append("\(heading)：\n\(value)")
+                blocks.append("\(section.rawValue)\n\(value)")
             }
         }
-        let evidence = stringArray(dict, keys: ["evidence", "证据"])
+
+        let evidence = stringArray(dict, keys: ["evidence"])
         if !evidence.isEmpty {
-            blocks.append("证据：\n" + evidence.map { "- \($0)" }.joined(separator: "\n"))
+            blocks.append(
+                "\(Section.evidence.rawValue)\n" +
+                evidence.map { "- \($0)" }.joined(separator: "\n")
+            )
         }
+
         return blocks.joined(separator: "\n\n")
     }
+
 }
 
 private extension String {
