@@ -20,9 +20,8 @@ struct RootView: View {
     }
 }
 
-/// SwiftUI calls this view only from the result scene. Once the host NSWindow
-/// is actually attached, use AppKit's standard show operation for that window.
-/// It intentionally does not alter window level, position, or any Settings UI.
+/// SwiftUI calls this view only from the result scene. Register the exact host
+/// window so activation and scene attachment can arrive in either order.
 private struct ResultWindowPresentationBridge: NSViewRepresentable {
     func makeNSView(context: Context) -> ResultWindowAttachmentView {
         ResultWindowAttachmentView()
@@ -32,15 +31,10 @@ private struct ResultWindowPresentationBridge: NSViewRepresentable {
 }
 
 private final class ResultWindowAttachmentView: NSView {
-    private var hasPresented = false
-
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        guard !hasPresented,
-              NSApp.isActive,
-              let window else { return }
-        window.makeKeyAndOrderFront(nil)
-        hasPresented = true
+        guard let window else { return }
+        ResultWindowPresenter.register(window)
     }
 }
 
