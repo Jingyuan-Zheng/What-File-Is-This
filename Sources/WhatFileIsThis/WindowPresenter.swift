@@ -3,11 +3,18 @@ import AppKit
 @MainActor
 enum WindowPresenter {
     private static var presentationGeneration = 0
+    private static weak var resultWindow: NSWindow?
+    private static var deactivationObserver: NSObjectProtocol?
 
-    /// Brings the app's window forward during launch without making it permanently
-    /// float above other applications. A few bounded retries cover the interval in
-    /// which SwiftUI creates and attaches its WindowGroup window.
-    static func present() {
+    /// Presents only the SwiftUI result window. When called before SwiftUI has
+    /// attached that window, bounded retries cover the creation interval.
+    static func present(window: NSWindow? = nil) {
+        if let window {
+            presentationGeneration += 1
+            present(window)
+            return
+        }
+
         presentationGeneration += 1
         let generation = presentationGeneration
 
@@ -17,30 +24,47 @@ enum WindowPresenter {
         for delay in [0.0, 0.15, 0.5, 1.0] {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 guard generation == presentationGeneration else { return }
-                presentAvailableWindows()
-            }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            guard generation == presentationGeneration else { return }
-            for window in NSApplication.shared.windows where window.level == .floating {
-                window.level = .normal
+                guard let window = primaryResultWindow() else { return }
+                present(window)
             }
         }
     }
 
-    private static func presentAvailableWindows() {
-        NSApplication.shared.unhide(nil)
-        NSRunningApplication.current.activate(options: [.activateAllWindows])
+    private static func present(_ window: NSWindow) {
+        resultWindow = window
+        observeAppDeactivationIfNeeded()
 
-        for window in NSApplication.shared.windows where window.canBecomeKey {
-            window.collectionBehavior.insert(.moveToActiveSpace)
-            if window.isMiniaturized {
-                window.deminiaturize(nil)
+        NSApplication.shared.setActivationPolicy(.regular)
+        NSApplication.shared.unhide(nil)
+        NSRunningApplication.current.activate(options: [])
+
+        window.collectionBehavior.insert(.moveToActiveSpace)
+        if window.isMiniaturized {
+            window.deminiaturize(nil)
+        }
+        window.level = .floating
+        window.orderFrontRegardless()
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private static func primaryResultWindow() -> NSWindow? {
+        resultWindow ?? NSApplication.shared.windows.first {
+            $0.canBecomeKey && $0.title == "What File Is This"
+        }
+    }
+
+    private static func observeAppDeactivationIfNeeded() {
+        guard deactivationObserver == nil else { return }
+
+        deactivationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: NSApplication.shared,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                presentationGeneration += 1
+                resultWindow?.level = .normal
             }
-            window.level = .floating
-            window.orderFrontRegardless()
-            window.makeKeyAndOrderFront(nil)
         }
     }
 }

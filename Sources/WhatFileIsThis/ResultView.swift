@@ -34,7 +34,7 @@ private struct WindowFrontmostBridge: NSViewRepresentable {
     private func presentWhenAttached(_ view: NSView) {
         DispatchQueue.main.async {
             guard view.window != nil else { return }
-            WindowPresenter.present()
+            WindowPresenter.present(window: view.window)
         }
     }
 }
