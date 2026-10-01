@@ -34,7 +34,7 @@ struct ResultParser {
         .belongsTo: ["[BELONGSTO]"],
         .howToOpen: ["[HOWTOOPEN]"],
         .deleteGuidance: ["[DELETEGUIDANCE]"],
-        .source: ["[WORKPUBLICATIONINFO]", "[CURRENTFILESOURCE]"],
+        .source: ["[WORKPUBLICATIONINFO]", "[CURRENTFILESOURCE]", "[SOFTWAREOFFICIALSOURCE]"],
         .confidence: [],
         .evidence: []
     ]
@@ -111,7 +111,7 @@ struct ResultParser {
             belongsTo: body(.belongsTo),
             purpose: body(.purpose),
             openWith: body(.howToOpen).nilIfEmpty,
-            deletion: body(.deleteGuidance),
+            deletion: stripLeadingProtocolMarker(body(.deleteGuidance)),
             source: body(.source),
             confidence: body(.confidence),
             evidence: evidence,
@@ -238,6 +238,21 @@ struct ResultParser {
             result = String(result.dropFirst(2).dropLast(2))
         }
         return result
+    }
+
+    private static func stripLeadingProtocolMarker(_ value: String) -> String {
+        let markers: Set<String> = [
+            "MAYDELETECONFIRM_FIRST",
+            "MAY_DELETE_CONFIRM_FIRST",
+            "DO_NOT_DELETE",
+            "CANNOT_DETERMINE"
+        ]
+        var lines = value.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        while let first = lines.first,
+              markers.contains(first.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()) {
+            lines.removeFirst()
+        }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func parseBridgeFormat(_ text: String) throws -> ParsedResultFile {

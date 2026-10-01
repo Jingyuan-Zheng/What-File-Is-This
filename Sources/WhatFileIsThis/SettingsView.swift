@@ -15,7 +15,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .padding(16)
         .frame(width: 360)
-        .onChange(of: appLanguageRaw) { newValue in
+        .onChange(of: appLanguageRaw) { _, newValue in
             guard let language = AppLanguage(rawValue: newValue) else { return }
             UserDefaults.standard.set([language.rawValue], forKey: "AppleLanguages")
         }

@@ -63,7 +63,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.utilities</string>
   <key>LSMinimumSystemVersion</key>
-  <string>13.0</string>
+  <string>27.0</string>
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>CFBundleDocumentTypes</key>

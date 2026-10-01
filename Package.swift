@@ -5,7 +5,7 @@ let package = Package(
     name: "WhatFileIsThis",
     defaultLocalization: "en",
     platforms: [
-        .macOS(.v13)
+        .macOS("27.0")
     ],
     products: [
         .executable(name: "WhatFileIsThis", targets: ["WhatFileIsThis"])

@@ -31,11 +31,7 @@ enum WindowPresenter {
 
     private static func presentAvailableWindows() {
         NSApplication.shared.unhide(nil)
-        NSRunningApplication.current.activate(options: [
-            .activateAllWindows,
-            .activateIgnoringOtherApps
-        ])
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
 
         for window in NSApplication.shared.windows where window.canBecomeKey {
             window.collectionBehavior.insert(.moveToActiveSpace)
