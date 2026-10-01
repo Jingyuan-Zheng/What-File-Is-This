@@ -42,11 +42,11 @@ enum ResultReadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unreadable:
-            return "无法读取结果文件。"
+            return L10n.ui("Unable to read the result file.")
         case .invalidFormat:
-            return "无法识别结果文件格式。"
+            return L10n.ui("The result file format is not recognized.")
         case .missingAnalysis:
-            return "结果文件中没有可显示的分析内容。"
+            return L10n.ui("The result file does not contain analysis to display.")
         }
     }
 }

@@ -44,9 +44,9 @@ private struct LoadingView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .controlSize(.large)
-            Text(L10n.ui("正在分析文件…"))
+            Text(L10n.ui("Analyzing file…"))
                 .font(.title3.weight(.semibold))
-            Text(L10n.ui("结果准备好后会自动显示。"))
+            Text(L10n.ui("The result will appear automatically when ready."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -70,14 +70,14 @@ private struct AnalysisView: View {
                 LazyVStack(alignment: .leading, spacing: 26) {
                     AnalysisSection(
                         symbol: "doc.text.magnifyingglass",
-                        title: L10n.ui("这是什么"),
+                        title: L10n.ui("What is this?"),
                         content: analysis.what
                     )
 
                     if !analysis.belongsTo.isEmpty {
                         AnalysisSection(
                             symbol: "shippingbox",
-                            title: L10n.ui("属于"),
+                            title: L10n.ui("Belongs to"),
                             content: analysis.belongsTo
                         )
                     }
@@ -85,7 +85,7 @@ private struct AnalysisView: View {
                     if !analysis.purpose.isEmpty {
                         AnalysisSection(
                             symbol: "gearshape.2",
-                            title: L10n.ui("作用"),
+                            title: L10n.ui("Purpose"),
                             content: analysis.purpose
                         )
                     }
@@ -93,7 +93,7 @@ private struct AnalysisView: View {
                     if let openWith = analysis.openWith, !openWith.isEmpty {
                         AnalysisSection(
                             symbol: "arrow.up.forward.app",
-                            title: L10n.ui("如何打开"),
+                            title: L10n.ui("How to open"),
                             content: openWith
                         )
                     }
@@ -101,7 +101,7 @@ private struct AnalysisView: View {
                     if !analysis.deletion.isEmpty {
                         AnalysisSection(
                             symbol: deletionSymbol(for: analysis.deletion),
-                            title: L10n.ui("可以删除吗"),
+                            title: L10n.ui("Can it be deleted?"),
                             content: analysis.deletion
                         )
                     }
@@ -109,7 +109,7 @@ private struct AnalysisView: View {
                     if !analysis.source.isEmpty {
                         AnalysisSection(
                             symbol: "globe",
-                            title: L10n.ui("来源"),
+                            title: L10n.ui("Source"),
                             content: analysis.source
                         )
                     }
@@ -117,7 +117,7 @@ private struct AnalysisView: View {
                     if !analysis.confidence.isEmpty {
                         AnalysisSection(
                             symbol: "checkmark.shield",
-                            title: L10n.ui("可信度"),
+                            title: L10n.ui("Confidence"),
                             content: analysis.confidence
                         )
                     }
@@ -139,8 +139,13 @@ private struct AnalysisView: View {
     }
 
     private func deletionSymbol(for text: String) -> String {
-        if text.contains("不建议删除") { return "trash.slash" }
-        if text.contains("无法可靠判断") { return "questionmark.circle" }
+        let normalized = text.lowercased()
+        if normalized.contains("do not delete") || normalized.contains("not recommended to delete") || text.contains("不建议删除") {
+            return "trash.slash"
+        }
+        if normalized.contains("cannot reliably determine") || normalized.contains("unable to determine reliably") || text.contains("无法可靠判断") {
+            return "questionmark.circle"
+        }
         return "trash"
     }
 }
@@ -197,7 +202,7 @@ private struct FileIcon: View {
             image.size = NSSize(width: 64, height: 64)
             return image
         }
-        return NSImage(systemSymbolName: "doc.text.magnifyingglass", accessibilityDescription: "文件") ?? NSImage()
+        return NSImage(systemSymbolName: "doc.text.magnifyingglass", accessibilityDescription: L10n.ui("File")) ?? NSImage()
     }
 }
 
@@ -397,7 +402,7 @@ private struct EvidenceSection: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 9) {
-                Text(L10n.ui("关键证据"))
+                Text(L10n.ui("Key evidence"))
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -435,7 +440,7 @@ private struct FooterView: View {
             Button {
                 store.copyResult()
             } label: {
-                Label(L10n.ui("复制结果"), systemImage: "doc.on.doc")
+                Label(L10n.ui("Copy Result"), systemImage: "doc.on.doc")
             }
 
             Spacer()
@@ -444,14 +449,14 @@ private struct FooterView: View {
                 Button {
                     store.revealInFinder()
                 } label: {
-                    Label(L10n.ui("在访达中显示"), systemImage: "folder")
+                    Label(L10n.ui("Show in Finder"), systemImage: "folder")
                 }
             }
 
             Button {
                 store.closeWindow()
             } label: {
-                Label(L10n.ui("完成"), systemImage: "checkmark")
+                Label(L10n.ui("Done"), systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
         }
@@ -468,7 +473,7 @@ private struct EmptyViewState: View {
             Text("What File Is This")
                 .font(.title2.weight(.semibold))
 
-            Text(L10n.ui("通过 Finder 中的 “What file is this” 快捷指令运行文件分析，结果会显示在这里。"))
+            Text(L10n.ui("Run the “What File Is This” Finder shortcut to analyze a file. Its result will appear here."))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 430)
@@ -487,13 +492,13 @@ private struct ErrorView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text(L10n.ui("无法显示分析结果"))
+            Text(L10n.ui("Unable to display analysis result"))
                 .font(.title3.weight(.semibold))
             Text(message)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .textSelection(.enabled)
-            Button(L10n.ui("关闭")) {
+            Button(L10n.ui("Close")) {
                 store.closeWindow()
             }
             .keyboardShortcut(.defaultAction)
