@@ -8,9 +8,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var locale: Locale { Locale(identifier: rawValue) }
     var nativeName: String { self == .english ? "English" : "简体中文" }
 
-    static let launchedLanguage = Bundle.main.preferredLocalizations
-        .compactMap(AppLanguage.init(rawValue:))
-        .first ?? .english
+    static let launchedLanguage = AppLanguage(
+        rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? AppLanguage.english.rawValue
+    ) ?? .english
 }
 
 enum L10n {

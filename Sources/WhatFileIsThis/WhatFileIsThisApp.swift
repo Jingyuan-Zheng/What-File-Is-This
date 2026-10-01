@@ -8,11 +8,9 @@ struct WhatFileIsThisApp: App {
 
     var body: some Scene {
         Settings {
-            EmptyView()
+            SettingsView()
         }
         .commands {
-            CommandGroup(replacing: .appSettings) {}
-
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.string("menu.about", language: language)) {
                     appDelegate.showAboutPanel(language: language)
