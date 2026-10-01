@@ -130,7 +130,7 @@ echo
 echo "安装完成："
 echo "$DEST"
 echo
-echo "安装完成。App 不会自动打开空窗口；打开 .wfitresult 时才会显示结果。"
-echo "每个结果文件会在同一 App 进程中打开独立窗口。"
+echo "安装完成。快捷指令会通过 whatfileisthis URL 立即打开加载窗口。"
+echo "分析结果通过本机 socket 传入，不会创建 .wfitresult 缓存文件。"
 read -k 1 "?按任意键关闭…"
 echo
