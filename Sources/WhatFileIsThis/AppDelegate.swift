@@ -60,6 +60,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = NSHostingController(rootView: AnalysisSessionView(session: session))
         let window = NSWindow(contentViewController: controller)
         window.title = "What File Is This"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.styleMask.insert(.fullSizeContentView)
         window.setContentSize(NSSize(width: 780, height: 660))
         window.minSize = NSSize(width: 680, height: 500)
         window.isReleasedWhenClosed = false
