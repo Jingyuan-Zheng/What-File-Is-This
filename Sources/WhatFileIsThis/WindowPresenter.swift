@@ -10,8 +10,7 @@ enum WindowPresenter {
     /// attached that window, bounded retries cover the creation interval.
     static func present(window: NSWindow? = nil) {
         if let window {
-            presentationGeneration += 1
-            present(window)
+            presentResultWindow(window)
             return
         }
 
@@ -25,6 +24,21 @@ enum WindowPresenter {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 guard generation == presentationGeneration else { return }
                 guard let window = primaryResultWindow() else { return }
+                present(window)
+            }
+        }
+    }
+
+    /// SwiftUI can attach the NSWindow before it has completed its first
+    /// ordering pass. Re-present that exact result window, rather than every
+    /// app window, until the ordering settles. App deactivation cancels this.
+    private static func presentResultWindow(_ window: NSWindow) {
+        presentationGeneration += 1
+        let generation = presentationGeneration
+
+        for delay in [0.0, 0.15, 0.5, 1.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard generation == presentationGeneration else { return }
                 present(window)
             }
         }
