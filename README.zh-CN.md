@@ -9,3 +9,17 @@
 运行 `Build & Install.command`，应用会安装到 `~/Applications/What File Is This.app`。
 
 快捷指令会使用 `--wfit-result` 启动 App；应用本身不执行 AI 分析。
+
+## 结果桥接格式
+
+首选输入是通过 `--wfit-result /path/to/result.wfitresult` 传入的 `.wfitresult` 文件；应用也可读取 JSON、plist 和中文分段文本。`Samples/Example.wfitresult` 可在不运行快捷指令时测试 UI。
+
+## 功能
+
+- 展示文件身份、归属、用途、打开方式、删除建议、可信度和证据。
+- 显示真实 Finder 图标、元数据、Markdown 强调格式，并提供复制结果和在 Finder 中显示操作。
+- 标准设置窗口支持英文和简体中文。
+
+## 隐私与限制
+
+应用只在本地渲染结果，不发起网络请求。Finder 快捷指令或其 AI 服务负责分析，并决定传给应用的数据。
