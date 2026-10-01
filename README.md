@@ -13,9 +13,11 @@ It is useful for unfamiliar downloads, project files, archives, media sidecars, 
 1. Download `What File Is This.dmg` from the release.
 2. Open it and drag **What File Is This** to **Applications**.
 3. Open the app once. If macOS asks for confirmation, choose **Open**.
-4. Import `What file is this?.shortcut` into the Shortcuts app.
+4. Download and open [What file is this?.shortcut](What%20file%20is%20this%3F.shortcut) to import it into the Shortcuts app.
 
 The app requires macOS 27 or later.
+
+This project is available under the [MIT License](LICENSE).
 
 ## Use it from Finder
 

@@ -13,9 +13,11 @@
 1. 从发布页下载 `What File Is This.dmg`。
 2. 打开它，将 **What File Is This** 拖入 **Applications（应用程序）**。
 3. 先打开 App 一次；如果 macOS 询问确认，请选择“打开”。
-4. 在“快捷指令”App 中导入 `What file is this?.shortcut`。
+4. 下载并打开 [What file is this?.shortcut](What%20file%20is%20this%3F.shortcut)，在“快捷指令”App 中导入。
 
 需要 macOS 27 或更高版本。
+
+本项目采用 [MIT License](LICENSE) 开源。
 
 ## 在 Finder 中使用
 
