@@ -39,15 +39,6 @@ struct ResultParser {
         .evidence: []
     ]
 
-    /// Older result formats expose several source sub-fields. Keep the
-    /// distinction visible instead of flattening their values into an
-    /// unlabeled paragraph beneath the Source section.
-    private static let sourceFieldLabels: [String: String] = [
-        "[WORKPUBLICATIONINFO]": "Work or publication information",
-        "[CURRENTFILESOURCE]": "Current file source",
-        "[SOFTWAREOFFICIALSOURCE]": "Official software source"
-    ]
-
     static func parseResultFile(at url: URL) throws -> ParsedResultFile {
         guard let data = try? Data(contentsOf: url) else {
             throw ResultReadError.unreadable
@@ -85,32 +76,14 @@ struct ResultParser {
         let lines = text.replacingOccurrences(of: "\r\n", with: "\n").split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         var sections: [Section: [String]] = [:]
         var current: Section?
-        var pendingSourceFieldLabel: String?
 
         for originalLine in lines {
             let line = originalLine.trimmingCharacters(in: .whitespaces)
             if let match = splitHeading(line) {
                 current = match.heading
-                pendingSourceFieldLabel = nil
-
-                if let label = match.sourceFieldLabel {
-                    if match.remainder.isEmpty {
-                        pendingSourceFieldLabel = label
-                    } else {
-                        sections[.source, default: []].append("\(label): \(match.remainder)")
-                    }
-                } else {
-                    sections[match.heading, default: []].append(match.remainder)
-                }
+                sections[match.heading, default: []].append(match.remainder)
             } else if let current {
-                if current == .source,
-                   let label = pendingSourceFieldLabel,
-                   !line.isEmpty {
-                    sections[.source, default: []].append("\(label): \(line)")
-                    pendingSourceFieldLabel = nil
-                } else {
-                    sections[current, default: []].append(originalLine)
-                }
+                sections[current, default: []].append(originalLine)
             }
         }
 
@@ -159,7 +132,7 @@ struct ResultParser {
         )
     }
 
-    private static func splitHeading(_ line: String) -> (heading: Section, remainder: String, sourceFieldLabel: String?)? {
+    private static func splitHeading(_ line: String) -> (heading: Section, remainder: String)? {
         var candidate = line.trimmingCharacters(in: .whitespacesAndNewlines)
         candidate = candidate.replacingOccurrences(of: "**", with: "")
 
@@ -173,7 +146,7 @@ struct ResultParser {
 
             for heading in headings {
                 if candidate == heading {
-                    return (section, "", sourceFieldLabels[heading])
+                    return (section, "")
                 }
 
                 // Also tolerate "[FILE]: value" and "[FILE] value".
@@ -184,7 +157,7 @@ struct ResultParser {
                     if suffix.hasPrefix(":") || suffix.hasPrefix("：") {
                         let remainder = String(suffix.dropFirst())
                             .trimmingCharacters(in: .whitespacesAndNewlines)
-                        return (section, remainder, sourceFieldLabels[heading])
+                        return (section, remainder)
                     }
                 }
             }
@@ -197,7 +170,7 @@ struct ResultParser {
                 if candidate.hasPrefix(prefix) {
                     let remainder = String(candidate.dropFirst(prefix.count))
                         .trimmingCharacters(in: .whitespaces)
-                    return (section, remainder, nil)
+                    return (section, remainder)
                 }
             }
         }

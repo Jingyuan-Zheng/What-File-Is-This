@@ -15,6 +15,7 @@ struct WhatFileIsThisApp: App {
         .defaultSize(width: 780, height: 660)
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
+        .defaultLaunchBehavior(.presented)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.string("menu.about", language: language)) {

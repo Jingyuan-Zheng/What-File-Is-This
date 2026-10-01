@@ -50,7 +50,7 @@ enum WindowPresenter {
 
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.unhide(nil)
-        NSRunningApplication.current.activate(options: [])
+        NSApplication.shared.activate()
 
         window.collectionBehavior.insert(.moveToActiveSpace)
         if window.isMiniaturized {
