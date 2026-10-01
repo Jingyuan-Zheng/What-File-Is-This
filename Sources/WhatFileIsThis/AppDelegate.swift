@@ -5,10 +5,16 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var sessions: [String: AnalysisSession] = [:]
     private var sessionWindows: [String: NSWindowController] = [:]
-    private var resultFiles: Set<URL> = []
+    private lazy var resultServer = LocalResultServer { [weak self] payload in
+        self?.apply(payload)
+    }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        try? resultServer.start()
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
@@ -18,9 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        for url in resultFiles where isManagedResultFile(url) {
-            try? FileManager.default.removeItem(at: url)
-        }
+        resultServer.stop()
     }
 
     private func handle(_ url: URL) {
@@ -33,11 +37,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch command {
         case "loading":
             showSession(id: id)
-        case "result":
-            guard let encodedPath = components.queryItems?.first(where: { $0.name == "file_b64" })?.value,
-                  let path = decodeBase64URL(encodedPath),
-                  !path.isEmpty else { return }
-            applyResult(at: URL(fileURLWithPath: path), to: id)
         default:
             return
         }
@@ -77,30 +76,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
-    private func applyResult(at url: URL, to id: String) {
-        guard isManagedResultFile(url),
-              let parsed = try? ResultParser.parseResultFile(at: url) else { return }
-        resultFiles.insert(url.standardizedFileURL)
-        let session = sessions[id] ?? AnalysisSession(id: id)
-        session.analysis = parsed.analysis
-        sessions[id] = session
-        showSession(id: id)
-    }
+    private func apply(_ payload: LocalResultPayload) {
+        guard let pathData = Data(base64Encoded: payload.pathB64),
+              let path = String(data: pathData, encoding: .utf8),
+              let resultData = Data(base64Encoded: payload.resultB64),
+              let resultText = String(data: resultData, encoding: .utf8),
+              !payload.id.isEmpty else { return }
 
-    private func isManagedResultFile(_ url: URL) -> Bool {
-        let cache = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Caches/WhatFileIsThis", isDirectory: true)
-            .standardizedFileURL
-        let candidate = url.standardizedFileURL
-        return candidate.path.hasPrefix(cache.path + "/") && candidate.pathExtension == "wfitresult"
-    }
-
-    private func decodeBase64URL(_ value: String) -> String? {
-        var base64 = value.replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
-        guard let data = Data(base64Encoded: base64) else { return nil }
-        return String(data: data, encoding: .utf8)
+        let session = sessions[payload.id] ?? AnalysisSession(id: payload.id)
+        session.analysis = ResultParser.parseSectionedAnalysis(resultText, targetPath: path)
+        sessions[payload.id] = session
+        showSession(id: payload.id)
     }
 
     func showAboutPanel(language: AppLanguage) {
