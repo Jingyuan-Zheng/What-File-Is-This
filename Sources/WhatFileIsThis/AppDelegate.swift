@@ -63,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.setContentSize(NSSize(width: 780, height: 660))
         window.minSize = NSSize(width: 680, height: 500)
         window.isReleasedWhenClosed = false
+        center(window, on: screenContainingMouse())
 
         let windowController = NSWindowController(window: window)
         sessionWindows[id] = windowController
@@ -79,6 +80,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
+    }
+
+    private func screenContainingMouse() -> NSScreen? {
+        let location = NSEvent.mouseLocation
+        return NSScreen.screens.first { $0.frame.contains(location) } ?? NSScreen.main
+    }
+
+    private func center(_ window: NSWindow, on screen: NSScreen?) {
+        guard let screen else {
+            window.center()
+            return
+        }
+        let visibleFrame = screen.visibleFrame
+        let windowFrame = window.frame
+        let origin = NSPoint(
+            x: visibleFrame.midX - windowFrame.width / 2,
+            y: visibleFrame.midY - windowFrame.height / 2
+        )
+        window.setFrameOrigin(origin)
     }
 
     private func apply(_ payload: LocalResultPayload) {
