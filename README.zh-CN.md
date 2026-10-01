@@ -10,6 +10,13 @@
 
 快捷指令会使用 `--wfit-result` 启动 App；应用本身不执行 AI 分析。
 
+## 使用方法
+
+1. 首次运行 `Build & Install.command`。
+2. 将 `What file is this?.shortcut` 导入快捷指令，并在 Finder 中对选中的文件运行它。
+3. 快捷指令会写入结果桥接文件并自动打开查看器。
+4. 阅读分析、复制结果或在 Finder 中显示文件。也可双击 `Samples/Example.wfitresult`，无需快捷指令即可测试 UI。
+
 ## 结果桥接格式
 
 首选输入是通过 `--wfit-result /path/to/result.wfitresult` 传入的 `.wfitresult` 文件；应用也可读取 JSON、plist 和中文分段文本。`Samples/Example.wfitresult` 可在不运行快捷指令时测试 UI。

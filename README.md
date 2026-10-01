@@ -10,6 +10,13 @@ Run `Build & Install.command`. The app is installed at `~/Applications/What File
 
 The Shortcut starts the app with `--wfit-result`; the app does not perform AI analysis itself.
 
+## Use
+
+1. Run `Build & Install.command` once.
+2. Import `What file is this?.shortcut` into Shortcuts and run it on a Finder-selected file.
+3. The Shortcut writes a result bridge and opens the viewer automatically.
+4. Read the analysis, copy the result, or use Reveal in Finder. Double-click `Samples/Example.wfitresult` to test the UI without the Shortcut.
+
 ## Result bridge
 
 The preferred input is a `.wfitresult` file passed as `--wfit-result /path/to/result.wfitresult`. It can also read JSON, plist, and Chinese segmented-text results. The `Samples/Example.wfitresult` file lets you test the UI without the Shortcut.
