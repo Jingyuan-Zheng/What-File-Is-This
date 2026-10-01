@@ -45,7 +45,7 @@ struct ResultDocumentView: View {
     }
 }
 
-private struct LoadingView: View {
+struct LoadingView: View {
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -61,7 +61,7 @@ private struct LoadingView: View {
     }
 }
 
-private struct AnalysisView: View {
+struct AnalysisView: View {
     let analysis: AnalysisResult
     let onCopy: () -> Void
     let onRevealInFinder: () -> Void
@@ -439,7 +439,7 @@ private struct EvidenceSection: View {
     }
 }
 
-private struct FooterView: View {
+struct FooterView: View {
     let analysis: AnalysisResult
     let onCopy: () -> Void
     let onRevealInFinder: () -> Void

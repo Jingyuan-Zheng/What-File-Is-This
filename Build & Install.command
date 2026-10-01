@@ -54,6 +54,15 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <string>What File Is This</string>
   <key>CFBundleLocalizations</key>
   <array><string>en</string><string>zh-Hans</string></array>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>dev.is-a.zjy.whatfileisthis</string>
+      <key>CFBundleURLSchemes</key>
+      <array><string>whatfileisthis</string></array>
+    </dict>
+  </array>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
