@@ -2,31 +2,78 @@
 
 [English](README.md)
 
-原生 macOS SwiftUI 查看器，用于展示“这是什么文件”Finder 快捷指令生成的 AI 文件分析结果。它显示结论、文件元数据、证据，并支持复制和在 Finder 中显示。
+**这是什么文件**帮助你直接在 Finder 中理解陌生文件：选中一个文件或文件夹，运行附带的快捷指令，即可获得它是什么、可能属于什么、如何打开、删除是否有风险，以及结论依据的清晰说明。
 
-## 构建与安装
+它适合查看陌生下载文件、项目文件、压缩包、媒体附属文件、研究资料、医学影像样本等。它不会修改你选中的项目。
 
-运行 `Build & Install.command`，应用会安装到 `~/Applications/What File Is This.app`。
+![英文 DICOM 分析结果](docs/images/dicom-result-en.png)
 
-快捷指令会使用 `--wfit-result` 启动 App；应用本身不执行 AI 分析。
+![简体中文 DICOM 分析结果](docs/images/dicom-result-zh-Hans.png)
 
-## 使用方法
+## 安装
 
-1. 首次运行 `Build & Install.command`。
-2. 将 `What file is this?.shortcut` 导入快捷指令，并在 Finder 中对选中的文件运行它。
-3. 快捷指令会写入结果桥接文件并自动打开查看器。
-4. 阅读分析、复制结果或在 Finder 中显示文件。也可双击 `Samples/Example.wfitresult`，无需快捷指令即可测试 UI。
+1. 从发布页下载 `What File Is This.dmg`。
+2. 打开它，将 **What File Is This** 拖入 **Applications（应用程序）**。
+3. 先打开 App 一次；如果 macOS 询问确认，请选择“打开”。
+4. 在“快捷指令”App 中导入 `What file is this?.shortcut`。
 
-## 结果桥接格式
+需要 macOS 27 或更高版本。
 
-首选输入是通过 `--wfit-result /path/to/result.wfitresult` 传入的 `.wfitresult` 文件；应用也可读取 JSON、plist 和中文分段文本。`Samples/Example.wfitresult` 可在不运行快捷指令时测试 UI。
+## 在 Finder 中使用
 
-## 功能
+1. 在 Finder 中选中一个文件或文件夹。
+2. 按住 Control 点击，选择“快速操作”，再选择“这是什么文件？”。
+3. 结果窗口会立即显示，快捷指令继续准备分析。
+4. 阅读分析结果、复制文本、在访达中显示原文件，或在完成后关闭窗口。
 
-- 展示文件身份、归属、用途、打开方式、删除建议、可信度和证据。
-- 显示真实 Finder 图标、元数据、Markdown 强调格式，并提供复制结果和在 Finder 中显示操作。
-- 标准设置窗口支持英文和简体中文。
+每次运行都有独立窗口。关闭最后一个窗口会退出 App。
 
-## 隐私与限制
+## 调整语言
 
-应用只在本地渲染结果，不发起网络请求。Finder 快捷指令或其 AI 服务负责分析，并决定传给应用的数据。
+### App 界面语言
+
+选择 **What File Is This → 设置… → Language**，然后选择 **English** 或 **简体中文**。退出并重新打开 App 后，界面和标准 macOS 菜单会统一切换。
+
+### 分析结果语言
+
+快捷指令的分析提示前面有一个可编辑的语言值。打开快捷指令，找到内容为 `$language$ = Chinese` 的“文本”动作，将 `Chinese` 换成所需的输出语言。
+
+![快捷指令中的分析语言设置](docs/images/shortcut-language-setting.png)
+
+## 隐私与注意事项
+
+- App 仅在本地显示结果，不会修改选中的文件。
+- 快捷指令收集有限的本地信息并进行分析；处理敏感文件前，请先检查快捷指令中的动作。
+- 分析仅供参考。医学、法律、安全和删除建议不应替代专业判断或备份。
+
+## 构建与发布说明
+
+项目使用原生 SwiftUI/AppKit。Finder 快捷指令通过 `whatfileisthis` URL Scheme 立即启动加载窗口，并通过仅限当前用户的本机 Unix socket 发送完成后的分析；结果仅存在内存中，不创建 `.wfitresult` 桥接文件。
+
+### 从源码构建
+
+```bash
+swift build -c release
+./Build\ \&\ Install.command
+```
+
+`Build & Install.command` 会创建 `build/What File Is This.app`、安装到 `~/Applications`、注册 URL Scheme，并为本地应用进行 ad hoc 签名。
+
+### 制作 DMG
+
+本项目使用配套的 [Dmg Maker](../Dmg%20Maker) 项目及其现有背景图。请在本仓库中运行：
+
+```bash
+mkdir -p dist
+cd dist
+../../Dmg\ Maker/dmg.sh ../build/What\ File\ Is\ This.app ../../Dmg\ Maker/Background.png
+```
+
+生成的 `What File Is This.dmg` 位于 `dist/`。
+
+### 开发相关
+
+- App 源码：`Sources/WhatFileIsThis/`
+- 快捷指令示例与结果解析：`Samples/Example.wfitresult`、`ResultParser.swift`
+- 本机结果传输端点：`/private/tmp/what-file-is-this-<uid>.sock`
+- App 支持英文和简体中文。
