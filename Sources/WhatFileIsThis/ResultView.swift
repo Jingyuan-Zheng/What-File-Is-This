@@ -2,39 +2,46 @@ import AppKit
 import SwiftUI
 
 struct RootView: View {
-    @EnvironmentObject private var store: ResultStore
+    let document: ResultDocument
 
     var body: some View {
         Group {
-            if let analysis = store.analysis {
-                AnalysisView(analysis: analysis)
-            } else if let error = store.errorMessage {
-                ErrorView(message: error)
-            } else if store.isWaitingForResult {
-                LoadingView()
+            if let analysis = document.parsedResult?.analysis {
+                AnalysisView(
+                    analysis: analysis,
+                    onCopy: copyResult,
+                    onRevealInFinder: revealInFinder,
+                    onClose: closeWindow
+                )
             } else {
-                EmptyViewState()
+                LoadingView()
             }
         }
-        .background(ResultWindowPresentationBridge())
+    }
+
+    private func copyResult() {
+        guard let analysis = document.parsedResult?.analysis else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(analysis.rawText, forType: .string)
+    }
+
+    private func revealInFinder() {
+        guard let url = document.parsedResult?.analysis.targetURL,
+              FileManager.default.fileExists(atPath: url.path) else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    private func closeWindow() {
+        NSApplication.shared.keyWindow?.performClose(nil)
     }
 }
 
-/// SwiftUI calls this view only from the result scene. Register the exact host
-/// window so activation and scene attachment can arrive in either order.
-private struct ResultWindowPresentationBridge: NSViewRepresentable {
-    func makeNSView(context: Context) -> ResultWindowAttachmentView {
-        ResultWindowAttachmentView()
-    }
+struct ResultDocumentView: View {
+    let document: ResultDocument
 
-    func updateNSView(_ nsView: ResultWindowAttachmentView, context: Context) {}
-}
-
-private final class ResultWindowAttachmentView: NSView {
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        guard let window else { return }
-        ResultWindowPresenter.register(window)
+    var body: some View {
+        RootView(document: document)
     }
 }
 
@@ -55,8 +62,10 @@ private struct LoadingView: View {
 }
 
 private struct AnalysisView: View {
-    @EnvironmentObject private var store: ResultStore
     let analysis: AnalysisResult
+    let onCopy: () -> Void
+    let onRevealInFinder: () -> Void
+    let onClose: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -130,7 +139,12 @@ private struct AnalysisView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            FooterView(analysis: analysis)
+            FooterView(
+                analysis: analysis,
+                onCopy: onCopy,
+                onRevealInFinder: onRevealInFinder,
+                onClose: onClose
+            )
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
         }
@@ -426,8 +440,10 @@ private struct EvidenceSection: View {
 }
 
 private struct FooterView: View {
-    @EnvironmentObject private var store: ResultStore
     let analysis: AnalysisResult
+    let onCopy: () -> Void
+    let onRevealInFinder: () -> Void
+    let onClose: () -> Void
 
     private var canReveal: Bool {
         guard let url = analysis.targetURL else { return false }
@@ -437,7 +453,7 @@ private struct FooterView: View {
     var body: some View {
         HStack(spacing: 10) {
             Button {
-                store.copyResult()
+                onCopy()
             } label: {
                 Label(L10n.ui("Copy Result"), systemImage: "doc.on.doc")
             }
@@ -446,63 +462,18 @@ private struct FooterView: View {
 
             if canReveal {
                 Button {
-                    store.revealInFinder()
+                    onRevealInFinder()
                 } label: {
                     Label(L10n.ui("Show in Finder"), systemImage: "folder")
                 }
             }
 
             Button {
-                store.closeWindow()
+                onClose()
             } label: {
                 Label(L10n.ui("Done"), systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
         }
-    }
-}
-
-private struct EmptyViewState: View {
-    var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 46, weight: .regular))
-                .foregroundStyle(.secondary)
-
-            Text("What File Is This")
-                .font(.title2.weight(.semibold))
-
-            Text(L10n.ui("Run the “What File Is This” Finder shortcut to analyze a file. Its result will appear here."))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: 430)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
-    }
-}
-
-private struct ErrorView: View {
-    @EnvironmentObject private var store: ResultStore
-    let message: String
-
-    var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
-            Text(L10n.ui("Unable to display analysis result"))
-                .font(.title3.weight(.semibold))
-            Text(message)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-            Button(L10n.ui("Close")) {
-                store.closeWindow()
-            }
-            .keyboardShortcut(.defaultAction)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
     }
 }

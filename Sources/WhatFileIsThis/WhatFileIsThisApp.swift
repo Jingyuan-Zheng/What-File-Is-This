@@ -7,15 +7,16 @@ struct WhatFileIsThisApp: App {
     private let language = AppLanguage.launchedLanguage
 
     var body: some Scene {
-        Window("What File Is This", id: "result") {
-            RootView()
-                .environmentObject(ResultStore.shared)
+        DocumentGroup { document in
+            ResultDocumentView(document: document)
                 .frame(minWidth: 680, minHeight: 500)
+        }
+        makeReadableDocument: { _, _ in
+            ResultDocument()
         }
         .defaultSize(width: 780, height: 660)
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
-        .defaultLaunchBehavior(.presented)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.string("menu.about", language: language)) {

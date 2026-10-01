@@ -1,6 +1,6 @@
 import Foundation
 
-struct AnalysisResult: Equatable {
+struct AnalysisResult: Equatable, Sendable {
     var fileName: String
     var what: String
     var belongsTo: String
@@ -29,7 +29,7 @@ struct AnalysisResult: Equatable {
     }
 }
 
-struct ParsedResultFile {
+struct ParsedResultFile: Sendable {
     var analysis: AnalysisResult
     var deleteAfterOpen: Bool
 }

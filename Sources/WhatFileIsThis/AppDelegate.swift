@@ -3,31 +3,6 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        ResultStore.shared.loadCommandLineArgumentsIfNeeded()
-        ResultWindowPresenter.requestPresentation()
-    }
-
-    func applicationDidBecomeActive(_ notification: Notification) {
-        ResultWindowPresenter.applicationDidBecomeActive()
-    }
-
-    func applicationDidResignActive(_ notification: Notification) {
-        ResultWindowPresenter.applicationDidResignActive()
-    }
-
-    func application(_ sender: NSApplication, openFiles filenames: [String]) {
-        ResultStore.shared.open(urls: filenames.map { URL(fileURLWithPath: $0) })
-        sender.reply(toOpenOrPrint: .success)
-        ResultWindowPresenter.requestPresentation()
-    }
-
-    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        ResultStore.shared.open(urls: [URL(fileURLWithPath: filename)])
-        ResultWindowPresenter.requestPresentation()
-        return true
-    }
-
     func showAboutPanel(language: AppLanguage) {
         NSApp.orderFrontStandardAboutPanel(options: [.credits: aboutCredits(language: language)])
         NSApp.activate()

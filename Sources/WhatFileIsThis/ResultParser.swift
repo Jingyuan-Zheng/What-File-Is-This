@@ -44,6 +44,11 @@ struct ResultParser {
             throw ResultReadError.unreadable
         }
 
+        return try parseResultData(data)
+    }
+
+    static func parseResultData(_ data: Data) throws -> ParsedResultFile {
+
         if let text = String(data: data, encoding: .utf8) {
             if text.hasPrefix("WFITRESULT/1") {
                 return try parseBridgeFormat(text)
