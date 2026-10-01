@@ -114,14 +114,14 @@ PLIST
 /usr/bin/codesign --verify --deep --strict "$DEST"
 
 # Register the application with Launch Services. Do not launch an empty window here;
-# the Shortcut will start a fresh instance and pass the result file explicitly.
+# opening a .wfitresult file lets macOS create one document window for that result.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$DEST" >/dev/null 2>&1 || true
 
 echo
 echo "安装完成："
 echo "$DEST"
 echo
-echo "安装完成。App 不会自动打开空窗口；运行 Finder 快捷指令时才会启动。"
-echo "每次分析会启动一个独立结果窗口，关闭窗口后对应 App 实例自动退出。"
+echo "安装完成。App 不会自动打开空窗口；打开 .wfitresult 时才会显示结果。"
+echo "每个结果文件会在同一 App 进程中打开独立窗口。"
 read -k 1 "?按任意键关闭…"
 echo
