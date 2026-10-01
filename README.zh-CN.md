@@ -6,8 +6,6 @@
 
 它适合查看陌生下载文件、项目文件、压缩包、媒体附属文件、研究资料、医学影像样本等。它不会修改你选中的项目。
 
-![英文 DICOM 分析结果](docs/images/dicom-result-en.png)
-
 ![简体中文 DICOM 分析结果](docs/images/dicom-result-zh-Hans.png)
 
 ## 安装
@@ -37,8 +35,6 @@
 ### 分析结果语言
 
 快捷指令的分析提示前面有一个可编辑的语言值。打开快捷指令，找到内容为 `$language$ = Chinese` 的“文本”动作，将 `Chinese` 换成所需的输出语言。
-
-![快捷指令中的分析语言设置](docs/images/shortcut-language-setting.png)
 
 ## 隐私与注意事项
 

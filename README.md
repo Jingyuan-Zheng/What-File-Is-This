@@ -8,8 +8,6 @@ It is useful for unfamiliar downloads, project files, archives, media sidecars, 
 
 ![An English DICOM analysis result](docs/images/dicom-result-en.png)
 
-![A Simplified Chinese DICOM analysis result](docs/images/dicom-result-zh-Hans.png)
-
 ## Install
 
 1. Download `What File Is This.dmg` from the release.
