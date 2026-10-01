@@ -37,8 +37,6 @@ final class ResultStore: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
-
-        presentWindow()
     }
 
     func waitForResult(at url: URL) {
@@ -56,17 +54,12 @@ final class ResultStore: ObservableObject {
             }
         }
         RunLoop.main.add(pendingResultTimer!, forMode: .common)
-        presentWindow()
     }
 
     private func stopWaitingForResult() {
         pendingResultTimer?.invalidate()
         pendingResultTimer = nil
         isWaitingForResult = false
-    }
-
-    private func presentWindow() {
-        WindowPresenter.present()
     }
 
     func loadCommandLineArgumentsIfNeeded() {

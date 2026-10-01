@@ -7,7 +7,7 @@ struct WhatFileIsThisApp: App {
     private let language = AppLanguage.launchedLanguage
 
     var body: some Scene {
-        WindowGroup("What File Is This") {
+        Window("What File Is This", id: "result") {
             RootView()
                 .environmentObject(ResultStore.shared)
                 .frame(minWidth: 680, minHeight: 500)

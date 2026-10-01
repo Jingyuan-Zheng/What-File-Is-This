@@ -5,23 +5,16 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         ResultStore.shared.loadCommandLineArgumentsIfNeeded()
-        presentWindow()
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         ResultStore.shared.open(urls: filenames.map { URL(fileURLWithPath: $0) })
         sender.reply(toOpenOrPrint: .success)
-        presentWindow()
     }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
         ResultStore.shared.open(urls: [URL(fileURLWithPath: filename)])
-        presentWindow()
         return true
-    }
-
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
     }
 
     func showAboutPanel(language: AppLanguage) {
@@ -44,9 +37,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let style = NSMutableParagraphStyle()
         style.alignment = .center
         return style
-    }
-
-    private func presentWindow() {
-        WindowPresenter.present()
     }
 }
