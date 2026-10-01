@@ -25,6 +25,20 @@ struct ResultParser {
         "证据": .evidence
     ]
 
+    /// Apple Intelligence can occasionally omit underscores from otherwise
+    /// valid machine headings. Keep the result viewer resilient to those
+    /// minor protocol variations instead of exposing the raw response.
+    private static let headingAliases: [Section: [String]] = [
+        .file: ["[FILENAME]"],
+        .whatIsIt: ["[WHATISIT]", "[WHATISTHIS]"],
+        .belongsTo: ["[BELONGSTO]"],
+        .howToOpen: ["[HOWTOOPEN]"],
+        .deleteGuidance: ["[DELETEGUIDANCE]"],
+        .source: ["[WORKPUBLICATIONINFO]", "[CURRENTFILESOURCE]"],
+        .confidence: [],
+        .evidence: []
+    ]
+
     static func parseResultFile(at url: URL) throws -> ParsedResultFile {
         guard let data = try? Data(contentsOf: url) else {
             throw ResultReadError.unreadable
@@ -115,23 +129,24 @@ struct ResultParser {
         // [WHAT_IS_IT]
         // ...
         for section in Section.allCases {
-            if candidate == section.rawValue {
-                return (section, "")
-            }
+            let headings = [section.rawValue, section.rawValue.replacingOccurrences(of: "_", with: "")]
+                + headingAliases[section, default: []]
 
-            // Also tolerate "[FILE]: value" and "[FILE] value".
-            if candidate.hasPrefix(section.rawValue) {
-                let suffix = String(candidate.dropFirst(section.rawValue.count))
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                if suffix.isEmpty {
+            for heading in headings {
+                if candidate == heading {
                     return (section, "")
                 }
 
-                if suffix.hasPrefix(":") || suffix.hasPrefix("：") {
-                    let remainder = String(suffix.dropFirst())
+                // Also tolerate "[FILE]: value" and "[FILE] value".
+                if candidate.hasPrefix(heading) {
+                    let suffix = String(candidate.dropFirst(heading.count))
                         .trimmingCharacters(in: .whitespacesAndNewlines)
-                    return (section, remainder)
+
+                    if suffix.hasPrefix(":") || suffix.hasPrefix("：") {
+                        let remainder = String(suffix.dropFirst())
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        return (section, remainder)
+                    }
                 }
             }
         }
